@@ -9,7 +9,7 @@ class PagerDutyClient:
     logger = logging.getLogger(__name__)
 
     def __init__(self, api_key=None):
-        if api_key == None:
+        if api_key is None:
             self.pd_api_key = os.getenv("PAGERDUTY_API_KEY")
         self.pd_from = os.getenv("PAGERDUTY_FROM")
         self.session = pdpyras.APISession(self.pd_api_key, self.pd_from)
@@ -46,7 +46,7 @@ class PagerDutyClient:
 
         r.raise_for_status()
 
-        return {"message": f"Succeed to trigger incident"}
+        return {"message": "Succeed to trigger incident"}
 
     # TODO PagerDuty has bug in that functionallity - missing 'Content-Type': 'application/json' which cause error `params must be a Hash`
     # def trigger_incident(self, incident_title):

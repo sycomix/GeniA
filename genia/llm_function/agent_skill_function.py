@@ -58,10 +58,7 @@ class AgentSkillFunction(LLMFunction):
             new_task = tasks_list.popleft()
             # Send to execution function to complete the task based on the context
             agents_ctx.append({"role": "user", "content": new_task["task"]})
-            if len(tasks_list) > 0:
-                result = self.execution_agent(agents_ctx, agent_name)
-            else:
-                result = self.execution_agent(agents_ctx, agent_name)
+            result = self.execution_agent(agents_ctx, agent_name)
             agents_ctx.append({"role": "assistant", "content": result})
 
         return result
@@ -69,8 +66,13 @@ class AgentSkillFunction(LLMFunction):
     def execution_agent(self, agents_ctx, agent_name):
         messages = []
         execution_agent_prompt = settings["execution_agent_prompt"]["system"]
-        if settings[agent_name + "_agent_prompt"] is not None:
-            messages.append({"role": "system", "content": settings[agent_name + "_agent_prompt"]["system"]})
+        if settings[f"{agent_name}_agent_prompt"] is not None:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": settings[f"{agent_name}_agent_prompt"]["system"],
+                }
+            )
 
         messages.append({"role": "system", "content": execution_agent_prompt})
         messages.extend(agents_ctx)
@@ -98,7 +100,7 @@ class AgentSkillFunction(LLMFunction):
                 try:
                     llm_matching_tool = self._function_repository.find_tool_by_name(function_name)
                     if llm_matching_tool is None:
-                        raise ValueError("function {} doesn't exist".format(llm_matching_tool))
+                        raise ValueError(f"function {llm_matching_tool} doesn't exist")
                     self.logger.debug("found the tool: %s", llm_matching_tool)
                     function_response = self.llm_function_call(
                         messages,
@@ -120,7 +122,7 @@ class AgentSkillFunction(LLMFunction):
                     {
                         "role": "function",
                         "name": function_name,
-                        "content": str(function_response),
+                        "content": function_response,
                     }
                 )
 
@@ -141,37 +143,35 @@ class AgentSkillFunction(LLMFunction):
     def create_function(self, category: str) -> LLMFunction:
         self.logger.debug("create_function with category: %s", category)
         lower_category = category.lower()
-        if lower_category == "url":
-            fun = URLFunction()
+        if lower_category == "open_api":
+            fun = OpenApiFunction()
         elif lower_category == "python":
             fun = PythonFunction()
-        elif lower_category == "open_api":
-            fun = OpenApiFunction()
         elif lower_category == "skill":
             fun = SkillFunction(self._function_repository)
+        elif lower_category == "url":
+            fun = URLFunction()
         else:
-            raise ValueError("category is not supported:" + category)
+            raise ValueError(f"category is not supported:{category}")
         return fun
 
     def planner_agent(self, tool_name, agent_name):
         skill = self._function_repository.find_skill_by_name(tool_name)
         planner_agent_prompt = settings["planner_agent_prompt"]["system"]
-        if settings[agent_name + "_agent_prompt"] is not None:
-            special_agent_prompt = settings[agent_name + "_agent_prompt"]["system"]
+        if settings[f"{agent_name}_agent_prompt"] is not None:
+            special_agent_prompt = settings[f"{agent_name}_agent_prompt"]["system"]
         else:
             special_agent_prompt = settings["agent_prompt"]["system"]
         messages = [
             {"role": "system", "content": special_agent_prompt},
             {"role": "system", "content": planner_agent_prompt},
-        ]
-
-        messages.extend(
-            [
+            *[
                 {"role": "user", "content": item["content"]}
                 for item in self._llm_conversation.get_messages()
                 if item["role"] == "user" and item["content"] != "yes"
-            ]
-        )
+            ],
+        ]
+
         messages.extend([{"role": "user", "content": skill}])
 
         functions = self._function_lookup_strategy.find_potential_tools(self._llm_conversation)

@@ -18,9 +18,6 @@ class URLFunction(LLMFunction):
 
     def format_url(self, function_config: dict, parameters: dict = {}):
         url = function_config["template"]
-        if len(parameters) > 0:
-            formatted_url = url.format(**parameters)
-        else:
-            formatted_url = url
+        formatted_url = url.format(**parameters) if parameters else url
         self.logger.debug(formatted_url)
         return formatted_url

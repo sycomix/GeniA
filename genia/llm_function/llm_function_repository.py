@@ -96,8 +96,7 @@ class LLMFunctionRepository:
         self.logger.debug(tools_list)
 
         tools_list = self.validate_tools_title(tools_list)
-        llm_tools_dict = dict(map(lambda obj: (obj["tool_name"], obj), tools_list))
-        return llm_tools_dict
+        return dict(map(lambda obj: (obj["tool_name"], obj), tools_list))
 
     def validate_tools_title(self, tools_list):
         return [
@@ -116,8 +115,7 @@ class LLMFunctionRepository:
                     except Exception:
                         self.logger.critical("failed loading file= %s, skipping", file_path)
         self.logger.debug(functions_list)
-        llm_functions_dict = dict(map(lambda obj: (obj["name"], obj), functions_list))
-        return llm_functions_dict
+        return dict(map(lambda obj: (obj["name"], obj), functions_list))
 
     def _init(self, llm_functions_dict, llm_tools_dict, skills_dict):
         self._llm_tools_dict = llm_tools_dict
@@ -176,15 +174,16 @@ class LLMFunctionRepository:
         return self._vector_store.similarity_search_with_score(query, k=k)
 
     def find_tools(self, required_functions: Set, tools: List):
-        tools_dict = {}
         # add mandatory tools that should always be available for the model
         required_functions.update(["get_top_available_tools"])  # "reasoning_acting"
-        for required_function in required_functions:
-            if self._llm_functions_dict.get(required_function) is not None:
-                tools_dict[required_function] = [
-                    self._llm_functions_dict[required_function],
-                    0.0,
-                ]
+        tools_dict = {
+            required_function: [
+                self._llm_functions_dict[required_function],
+                0.0,
+            ]
+            for required_function in required_functions
+            if self._llm_functions_dict.get(required_function) is not None
+        }
         for index, item in enumerate(tools):
             if index <= settings["tools_similarity"]["size_of_all_tools_request"]:
                 tools_dict[item[0].get("name")] = [
@@ -206,7 +205,7 @@ class LLMFunctionRepository:
     def update_skill(self, skill_name, new_function, new_tool, skill_code):
         pattern = "^[a-zA-Z0-9_-]{1,64}$"
         if not re.match(pattern, skill_name):
-            raise ValueError(skill_name + " does not match the regex: " + pattern)
+            raise ValueError(f"{skill_name} does not match the regex: {pattern}")
 
         with self._lock:
             root_folder = settings["skills"]["skills_repository_folder"]
@@ -227,7 +226,7 @@ class LLMFunctionRepository:
 
             skills_dict = self._load_skills(root_folder)
             skills_dict.update({skill_name: skill_code})
-            safe_txt_dump(os.path.join(root_folder, skill_name + ".txt"), skill_code)
+            safe_txt_dump(os.path.join(root_folder, f"{skill_name}.txt"), skill_code)
             self._llm_skills_dict[skill_name] = skill_code
 
             self._vector_store_add_texts([new_function])
@@ -257,7 +256,7 @@ class LLMFunctionRepository:
             if skill_name in skills_dict:
                 del skills_dict[skill_name]
             try:
-                os.remove(os.path.join(root_folder, skill_name + ".txt"))
+                os.remove(os.path.join(root_folder, f"{skill_name}.txt"))
             except OSError as e:
                 self.logger.warning(str(e))
             if skill_name in self._llm_skills_dict:
@@ -299,4 +298,4 @@ class LLMFunctionRepositoryAsAFunction:
             exact_match = repo._llm_functions_dict.get(filter)
             if exact_match is not None:
                 tools_list.append({"name": exact_match["name"], "description": exact_match["description"]})
-        return "These are the top {} tools found: ".format(k) + json.dumps(tools_list)
+        return f"These are the top {k} tools found: {json.dumps(tools_list)}"

@@ -18,10 +18,7 @@ class AWSClientEC2(AWSClient):
 
         instances = ec2_resource.instances.filter(Filters=[{"Name": "instance-state-name", "Values": ["running"]}])
 
-        result = []
-        for instance in instances:
-            result.append(instance.id)
-
+        result = [instance.id for instance in instances]
         return json.dumps(result)
 
     def _terminate_instance(self, aws_access_key_id, aws_secret_access_key, region_name, instance_id):
@@ -33,8 +30,7 @@ class AWSClientEC2(AWSClient):
         )
 
         instance = ec2_resource.Instance(instance_id)
-        response = instance.terminate()
-        return response
+        return instance.terminate()
 
     def _list_aws_regions(self, aws_access_key_id, aws_secret_access_key):
         ec2_resource = boto3.client(

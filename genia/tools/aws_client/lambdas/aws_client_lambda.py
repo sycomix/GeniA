@@ -74,7 +74,7 @@ class AWSClientLambda(AWSClient):
         response = client.update_function_code(FunctionName=function_name, ZipFile=zipped)
 
         self.logger.info("update lambda response: %s", response)
-        return "succeed to update lambda function " + function_name
+        return f"succeed to update lambda function {function_name}"
 
     def _invoke_lambda(
         self,
@@ -358,9 +358,7 @@ class AWSClientLambda(AWSClient):
             httpMethod="POST",
             type="AWS_PROXY",
             integrationHttpMethod="POST",
-            uri="arn:aws:apigateway:{}:lambda:path/2015-03-31/functions/{}/invocations".format(
-                region_name, lambda_arn
-            ),
+            uri=f"arn:aws:apigateway:{region_name}:lambda:path/2015-03-31/functions/{lambda_arn}/invocations",
         )
 
         self.logger.debug(f"api gateway put integration method response: {integration_response}")
@@ -370,13 +368,13 @@ class AWSClientLambda(AWSClient):
             StatementId=f"apigateway-{fixed_function_name}",
             Action="lambda:InvokeFunction",
             Principal="apigateway.amazonaws.com",
-            SourceArn="arn:aws:execute-api:{}:{}:{}/*".format(session.region_name, account_id, api_id),
+            SourceArn=f"arn:aws:execute-api:{session.region_name}:{account_id}:{api_id}/*",
         )
 
         deployment_response = api_client.create_deployment(restApiId=api_id, stageName="prod")
 
         self.logger.debug(f"create api gateway deployment method response: {deployment_response}")
-        public_url = "https://{}.execute-api.{}.amazonaws.com/prod/{}".format(api_id, region_name, fixed_function_name)
+        public_url = f"https://{api_id}.execute-api.{region_name}.amazonaws.com/prod/{fixed_function_name}"
         self.logger.debug(f"api gateway public url: {public_url}")
         return {"message": f"The lambda API Gateway can be reached here: {public_url}"}
 

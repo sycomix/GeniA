@@ -12,7 +12,7 @@ class KubernetesPod:
         self.api_client_core = KubernetesClient().get_core_api_client()
 
     def exec_command_in_pod(self, namespace, pod_name, command):
-        resp = stream.stream(
+        return stream.stream(
             self.api_client_core.connect_get_namespaced_pod_exec,
             name=pod_name,
             namespace=namespace,
@@ -22,8 +22,6 @@ class KubernetesPod:
             stdout=True,
             tty=False,
         )
-
-        return resp
 
     def delete_namespaced_pod(self, namespace, pod_name):
         resp = self.api_client_core.delete_namespaced_pod(
@@ -37,7 +35,7 @@ class KubernetesPod:
         return [i.to_dict() for i in resp.items]
 
     def get_pod_logs_by_label(self, namespace, label):
-        label_selector = "controller-uid={}".format(label)
+        label_selector = f"controller-uid={label}"
         resp = self.api_client_core.list_namespaced_pod(namespace=namespace, label_selector=label_selector)
 
         if resp.items:
@@ -63,7 +61,7 @@ class KubernetesPod:
     def patch_namespaced_pod(self, namespace, pod_name, body):
         patched_pod = self.api_client_core.patch_namespaced_pod(name=pod_name, namespace=namespace, body=body)
 
-        patched_pod_info = {
+        return {
             "name": patched_pod.metadata.name,
             "namespace": patched_pod.metadata.namespace,
             "labels": patched_pod.metadata.labels,
@@ -71,10 +69,10 @@ class KubernetesPod:
             "phase": patched_pod.status.phase,
             "podIP": patched_pod.status.pod_ip,
             "hostIP": patched_pod.status.host_ip,
-            "containers": [container.name for container in patched_pod.spec.containers],
+            "containers": [
+                container.name for container in patched_pod.spec.containers
+            ],
         }
-
-        return patched_pod_info
 
     def patch_namespaced_pod_image(self, namespace, pod_name, image):
         patch = {"spec": {"containers": [{"name": pod_name, "image": image}]}}
@@ -84,7 +82,7 @@ class KubernetesPod:
     def read_namespaced_pod(self, namespace, pod_name):
         pod = self.api_client_core.read_namespaced_pod(name=pod_name, namespace=namespace)
 
-        pod_info = {
+        return {
             "name": pod.metadata.name,
             "namespace": pod.metadata.namespace,
             "labels": pod.metadata.labels,
@@ -92,10 +90,11 @@ class KubernetesPod:
             "phase": pod.status.phase,
             "podIP": pod.status.pod_ip,
             "hostIP": pod.status.host_ip,
-            "containers": [{"name": container.name, "image": container.image} for container in pod.spec.containers],
+            "containers": [
+                {"name": container.name, "image": container.image}
+                for container in pod.spec.containers
+            ],
         }
-
-        return pod_info
 
     def read_namespaced_pod_resources(self, namespace, pod_name):
         pod = self.api_client_core.read_namespaced_pod(name=pod_name, namespace=namespace)

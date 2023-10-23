@@ -8,11 +8,11 @@ class JenkinsClient:
     logger = logging.getLogger(__name__)
 
     def __init__(self, url=None, username=None, password=None):
-        if url == None:
+        if url is None:
             self.url = os.getenv("JENKINS_URL")
-        if username == None:
+        if username is None:
             self.username = os.getenv("JENKINS_USERNAME")
-        if password == None:
+        if password is None:
             self.password = os.getenv("JENKINS_PASSWORD")
         self.server = jenkins.Jenkins(self.url, username=self.username, password=self.password)
         self.logger.info(self.get_info())

@@ -32,18 +32,18 @@ class LLMFunctionFactory:
     ) -> LLMFunction:
         self.logger.debug("create_function with category: %s", category)
         lower_category = category.lower()
-        if lower_category == "url":
-            fun = URLFunction()
-        elif lower_category == "python":
-            fun = PythonFunction()
-        elif lower_category == "open_api":
-            fun = OpenApiFunction()
-        elif lower_category == "skill":
-            fun = SkillFunction(function_repository)
-        elif lower_category == "agent_skill":
+        if lower_category == "agent_skill":
             fun = AgentSkillFunction(
                 function_repository, llm_conversation, function_lookup_strategy, self._agent
             )
+        elif lower_category == "open_api":
+            fun = OpenApiFunction()
+        elif lower_category == "python":
+            fun = PythonFunction()
+        elif lower_category == "skill":
+            fun = SkillFunction(function_repository)
+        elif lower_category == "url":
+            fun = URLFunction()
         else:
-            raise ValueError("category is not supported:" + category)
+            raise ValueError(f"category is not supported:{category}")
         return fun

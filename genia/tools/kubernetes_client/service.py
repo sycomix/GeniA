@@ -22,12 +22,13 @@ class KubernetesService:
 
     def get_service(self, namespace, service_name):
         api_response = self.api_client_secret.read_namespaced_service(service_name, namespace)
-        service = {
+        return {
             "name": api_response.metadata.name,
             "namespace": api_response.metadata.namespace,
             "type": api_response.spec.type,
             "cluster_ip": api_response.spec.cluster_ip,
             "external_ip": api_response.spec.external_i_ps,
-            "ports": [f"{port.protocol}/{port.port}" for port in api_response.spec.ports],
+            "ports": [
+                f"{port.protocol}/{port.port}" for port in api_response.spec.ports
+            ],
         }
-        return service

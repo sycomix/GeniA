@@ -57,7 +57,7 @@ class AWSClientEvents(AWSClient):
             ],
         )
 
-        self.logger.info("successfully create scheduled lambda: {}".format(response))
+        self.logger.info(f"successfully create scheduled lambda: {response}")
         return f"successfully create scheduled lambda: {lambda_function_name}"
 
     def _list_scheduled_lambdas(self, aws_access_key_id, aws_secret_access_key, region_name):
@@ -94,7 +94,7 @@ class AWSClientEvents(AWSClient):
             State="ENABLED",
         )
 
-        self.logger.info("successfully updated lambda schedule: {}".format(response))
+        self.logger.info(f"successfully updated lambda schedule: {response}")
         return f"successfully update scheduled lambda: {lambda_function_name}"
 
     def _delete_scheduled_lambda(
@@ -119,7 +119,7 @@ class AWSClientEvents(AWSClient):
 
         response = client.delete_rule(Name=f"scheduledLambda{lambda_function_name}")
 
-        self.logger.info("successfully deleted Lambda schedule: {}".format(response))
+        self.logger.info(f"successfully deleted Lambda schedule: {response}")
         return f"successfully deleted scheduled lambda: {lambda_function_name}"
 
     def create_scheduled_lambda(self, region_name, cron_expression, lambda_function_name):

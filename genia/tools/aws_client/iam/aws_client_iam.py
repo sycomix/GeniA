@@ -62,10 +62,7 @@ class AWSClientIAM(AWSClient):
 
         self.logger.debug(f"list roles response: {response}")
 
-        roles = []
-        for role in response["Roles"]:
-            roles.append(role["RoleName"])
-        return roles
+        return [role["RoleName"] for role in response["Roles"]]
 
     def _attach_policy_to_role(self, aws_access_key_id, aws_secret_access_key, role_name, policy):
         session = boto3.Session(

@@ -50,11 +50,12 @@ class LLMToolValidator:
     ):
         user_response = settings.agent_prompt.user_validation_message.format(function_title=llm_tool["title"])
         model_response = settings.agent_prompt.model_validation_message.format(function_name=llm_tool["tool_name"])
-        params_list = []
         if len(function_arguments) > 0:
             user_response += " with the following parameters?\n"
-            for key, value in function_arguments.items():
-                params_list.append(key.replace("_", " ") + ": " + str(value))
+            params_list = [
+                key.replace("_", " ") + ": " + str(value)
+                for key, value in function_arguments.items()
+            ]
             user_response += "\n".join(params_list)
         else:
             user_response += "?"

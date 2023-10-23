@@ -44,13 +44,16 @@ class StreamlitApp:
         with st.sidebar:
             st.header("Check out some of the use cases GeniA can help you with:")
             for example in genia_examples:
-                st.markdown("- " + example)
+                st.markdown(f"- {example}")
             st.divider()
             st.caption("Note: Genia is crafted for team collaboration and works best in slack")
             with st.expander("Additional prompts", expanded=False):
                 st.caption("set your credentials to try these:")
                 for example in grayed_out_examples:
-                    st.markdown("<span style='opacity: 0.5;'>" + example + "<span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='opacity: 0.5;'>{example}<span>",
+                        unsafe_allow_html=True,
+                    )
 
         # Initialize chat conversation
         if "messages" not in st.session_state:
@@ -84,10 +87,10 @@ class StreamlitApp:
 
                 # Simulate stream of response with milliseconds delay
                 for chunk in assistant_response.split():
-                    full_response += chunk + " "
+                    full_response += f"{chunk} "
                     time.sleep(0.05)
                     # Add a blinking cursor to simulate typing
-                    message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
+                    message_placeholder.markdown(f"{full_response}▌", unsafe_allow_html=True)
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
             # Add assistant response to chat history
             st.session_state.messages.append({"role": "assistant", "content": full_response})

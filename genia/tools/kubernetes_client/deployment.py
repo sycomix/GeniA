@@ -170,7 +170,7 @@ class KubernetesDeployment:
         }
 
     def rollout_restart_deployment(self, namespace, deployment_name):
-        self.logger.info("restarting deployment " + deployment_name)
+        self.logger.info(f"restarting deployment {deployment_name}")
         api_client = self.api_client_apps
 
         def patch_deployment():
@@ -185,10 +185,10 @@ class KubernetesDeployment:
         thread = threading.Thread(target=patch_deployment)
         thread.start()
         thread.join(timeout=10)
-        self.logger.info("Restarted deployment " + deployment_name)
+        self.logger.info(f"Restarted deployment {deployment_name}")
 
     def set_deployment_image(self, namespace, deployment_name, image):
-        self.logger.info("setting image for deployment " + deployment_name)
+        self.logger.info(f"setting image for deployment {deployment_name}")
         api_client = self.api_client_apps
         api_response = api_client.read_namespaced_deployment(deployment_name, namespace)
         api_response.spec.template.spec.containers[0].image = image
@@ -196,16 +196,18 @@ class KubernetesDeployment:
         return api_response.spec.template.spec.containers[0].image
 
     def get_deployment_image(self, namespace, deployment_name):
-        self.logger.info("getting image for deployment " + deployment_name)
+        self.logger.info(f"getting image for deployment {deployment_name}")
         api_client = KubernetesClient().get_apps_client()
         api_response = api_client.read_namespaced_deployment(deployment_name, namespace)
         return api_response.spec.template.spec.containers[0].image
 
     def get_deployment_replicas(self, namespace, deployment_name):
-        self.logger.info("getting replicas for deployment " + deployment_name)
+        self.logger.info(f"getting replicas for deployment {deployment_name}")
         api_client = self.api_client_core
         api_response = api_client.read_namespaced_deployment(deployment_name, namespace)
-        self.logger.info("replicas for deployment " + deployment_name + " is " + str(api_response.spec.replicas))
+        self.logger.info(
+            f"replicas for deployment {deployment_name} is {str(api_response.spec.replicas)}"
+        )
         return api_response.spec.replicas
 
     def set_deployment_replicas(self, namespace, deployment_name, replicas):
@@ -255,14 +257,13 @@ class KubernetesDeployment:
             deployment = api_client.read_namespaced_deployment(deployment_name, namespace)
 
             for container in deployment.spec.template.spec.containers:
-                if container_name is not None:
-                    if container.name == container_name:
-                        container.resources.requests = requests
-                        container.resources.limits = limits
-                else:
+                if (
+                    container_name is not None
+                    and container.name == container_name
+                    or container_name is None
+                ):
                     container.resources.requests = requests
                     container.resources.limits = limits
-
             api_response = api_client.patch_namespaced_deployment(deployment_name, namespace, deployment)
             return {"status": "success", "replicas": api_response.spec.replicas}
         except ApiException as e:
@@ -315,14 +316,12 @@ class KubernetesDeployment:
             selector={"matchLabels": {"app": image_name}},
         )
 
-        deployment = client.V1Deployment(
+        return client.V1Deployment(
             api_version="apps/v1",
             kind="Deployment",
             metadata=client.V1ObjectMeta(name=f"{image_name}"),
             spec=spec,
         )
-
-        return deployment
 
     def create_deployment(self, namespace, image_name, image, replicas=1):
         self.logger.info(f"creating deployment in namespace: {namespace} for image: {image}")

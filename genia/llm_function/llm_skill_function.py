@@ -17,5 +17,4 @@ class SkillFunction(LLMFunction):
 
     def evaluate(self, function_config: dict, parameters: dict) -> Any:
         skill = self._function_repository.find_skill_by_name(function_config["tool_name"])
-        response = settings["skill_template_prompt"]["template"].format(skill=skill)
-        return response
+        return settings["skill_template_prompt"]["template"].format(skill=skill)

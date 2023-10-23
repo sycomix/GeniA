@@ -99,10 +99,10 @@ def notify_user_selection(user_id, ts, original_message_text, selected_answer, c
         }
     ]
     if selected_answer == USER_SELECTION_YES:
-        attachments[0]["text"] = "✅ <@{}> approved this action".format(user_id)
+        attachments[0]["text"] = f"✅ <@{user_id}> approved this action"
         attachments[0]["color"] = "#008000"
     else:
-        attachments[0]["text"] = "👎 <@{}> disapproved this action".format(user_id)
+        attachments[0]["text"] = f"👎 <@{user_id}> disapproved this action"
         attachments[0]["color"] = "#FF0000"
 
     app.client.chat_update(channel=channel_id, ts=ts, attachments=attachments, text=original_message_text)
@@ -130,8 +130,7 @@ def command_handler(body, context):
 
 def update_chat_wait(channel_id, thread_ts):
     slack_resp = app.client.chat_postMessage(channel=channel_id, thread_ts=thread_ts, text=WAIT_MESSAGE)
-    reply_message_ts = slack_resp["message"]["ts"]
-    return reply_message_ts
+    return slack_resp["message"]["ts"]
 
 
 handler = SocketModeHandler(app, SLACK_APP_TOKEN)

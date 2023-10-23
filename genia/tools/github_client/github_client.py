@@ -20,7 +20,7 @@ class GithubClient:
         return self.access_token
 
     def get_orgprefix(self, org):
-        return org + "/"
+        return f"{org}/"
 
     def login(self) -> Github:
         return Github(self.get_token())

@@ -61,12 +61,9 @@ class OpenAIPluginsRepository:
         try:
             response = requests.get(base_url)
             # Check if the response status code is successful (200 OK)
-            if response.status_code == 200:
+            if response.status_code in {200, 400, 500}:
                 # Parse the JSON response
                 return response.json()
-            elif response.status_code in [400, 500]:
-                # Handle unsuccessful responses
-                return response.json()  # Assuming the API returns error info in JSON format
             else:
                 # Handle other potential status codes
                 return f"An error occurred: {response.status_code} {response.reason}"
@@ -94,9 +91,7 @@ class OpenAIPluginsRepository:
         except json.JSONDecodeError:
             openapi_spec = yaml.safe_load(openapi_spec_str)
 
-        # Use jsonref to resolve references
-        resolved_openapi_spec = jsonref.JsonRef.replace_refs(openapi_spec)
-        return resolved_openapi_spec
+        return jsonref.JsonRef.replace_refs(openapi_spec)
 
     def extract_parameters(self, openapi_spec, path, method):
         parameters = {"required": []}

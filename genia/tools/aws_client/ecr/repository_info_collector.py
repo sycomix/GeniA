@@ -16,8 +16,11 @@ class RepositoryInfoCollector:
 
     def _describe_repositories(self):
         paginator = self.client.get_paginator("describe_repositories")
-        repository_names = [repo["repositoryName"] for page in paginator.paginate() for repo in page["repositories"]]
-        return repository_names
+        return [
+            repo["repositoryName"]
+            for page in paginator.paginate()
+            for repo in page["repositories"]
+        ]
 
     def _get_lifecycle_policy(self, repository_name):
         try:
@@ -31,7 +34,9 @@ class RepositoryInfoCollector:
         image_details = [
             image for page in paginator.paginate(repositoryName=repository_name) for image in page["imageDetails"]
         ]
-        return len(image_details), sum([img["imageSizeInBytes"] for img in image_details])
+        return len(image_details), sum(
+            img["imageSizeInBytes"] for img in image_details
+        )
 
     def _get_tags(self, repository_name):
         region_name = self.client.meta.region_name
@@ -75,19 +80,19 @@ class RepositoryInfoCollector:
     def get_top_k_containers_usage(self, limit=10):
         repositories_info = self.collect_repository_info()
         sorted_repositories_info = sorted(repositories_info, key=lambda x: x["total_size_bytes"], reverse=True)
-        usage = []
-        for i, repo in enumerate(sorted_repositories_info[:limit]):
-            usage.append(
-                {
-                    "name": repo["name"],
-                    "image_count": repo["image_count"],
-                    "lifecycle_policy": repo["lifecycle_policy"] if repo["lifecycle_policy"] is not None else "no",
-                    "size": {
-                        "bytes": f'{repo["total_size_bytes"]:.3f}',
-                        "MB": f'{repo["total_size_mb"]:.3f}',
-                        "GB": f'{repo["total_size_gb"]:.3f}',
-                        "TB": f'{repo["total_size_tb"]:.3f}',
-                    },
-                }
-            )
-        return usage
+        return [
+            {
+                "name": repo["name"],
+                "image_count": repo["image_count"],
+                "lifecycle_policy": repo["lifecycle_policy"]
+                if repo["lifecycle_policy"] is not None
+                else "no",
+                "size": {
+                    "bytes": f'{repo["total_size_bytes"]:.3f}',
+                    "MB": f'{repo["total_size_mb"]:.3f}',
+                    "GB": f'{repo["total_size_gb"]:.3f}',
+                    "TB": f'{repo["total_size_tb"]:.3f}',
+                },
+            }
+            for repo in sorted_repositories_info[:limit]
+        ]

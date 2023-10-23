@@ -68,14 +68,12 @@ class KubernetesCronJob:
             schedule=schedule,
         )
 
-        cronjob = client.V1CronJob(
+        return client.V1CronJob(
             api_version="batch/v1",
             kind="CronJob",
             metadata=client.V1ObjectMeta(name=name),
             spec=cronjob_spec,
         )
-
-        return cronjob
 
     def create_cronjob(self, name, namespace, schedule, command, image):
         cronjob = self.create_cronjob_object(name=name, schedule=schedule, command=command, image=image)

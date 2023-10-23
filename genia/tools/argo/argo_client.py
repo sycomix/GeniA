@@ -29,12 +29,11 @@ class ArgoClient:
         self.tls_verify = os.getenv("PYTHON_ENV") != "development"
 
     def get_base_headers(self, token):
-        headers = {
+        return {
             "Content-Type": "application/json",
             "Accept": "application/json",
             "Authorization": f"Bearer {token}",
         }
-        return headers
 
     def get_version(self):
         r = requests.get(

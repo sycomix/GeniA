@@ -7,7 +7,7 @@ class KubernetesSecret:
 
     def list_namespaced_secret(self, namespace):
         secrets = self.api_client_secret.list_namespaced_secret(namespace)
-        [secret for secret in secrets.items]
+        list(secrets.items)
 
     def check_secret_exists(self, secret_name, namespace):
         self.api_client_secret.read_namespaced_secret(secret_name, namespace)

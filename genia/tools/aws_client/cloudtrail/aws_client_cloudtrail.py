@@ -60,13 +60,13 @@ class AWSClientCloudTrail(AWSClient):
                 remove_time = event["EventTime"]
                 removed_users[(username, groupname)] = remove_time
 
-        users = []
-        for (username, groupname), add_time in added_users.items():
-            if (username, groupname) not in removed_users or removed_users[
-                (username, groupname)
-            ] > add_time + timedelta(seconds=age_seconds):
-                users.append(username)
-        return users
+        return [
+            username
+            for (username, groupname), add_time in added_users.items()
+            if (username, groupname) not in removed_users
+            or removed_users[(username, groupname)]
+            > add_time + timedelta(seconds=age_seconds)
+        ]
 
     def list_users_in_group_more_than_x_time(self, user_group, age_seconds):
         return self._list_users_in_group_more_than_x_time(

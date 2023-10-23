@@ -109,9 +109,9 @@ class TokenLimiterOpenAI(TokenLimiter):
 
         num_tokens = 0
         for function in functions:
-            function_tokens = len(encoding.encode(function["name"]))
-            function_tokens += len(encoding.encode(function["description"]))
-
+            function_tokens = len(encoding.encode(function["name"])) + len(
+                encoding.encode(function["description"])
+            )
             if "parameters" in function:
                 parameters = function["parameters"]
                 if "properties" in parameters:
@@ -119,10 +119,7 @@ class TokenLimiterOpenAI(TokenLimiter):
                         function_tokens += len(encoding.encode(propertiesKey))
                         v = parameters["properties"][propertiesKey]
                         for field in v:
-                            if field == "type":
-                                function_tokens += 2
-                                function_tokens += len(encoding.encode(v["type"]))
-                            elif field == "description":
+                            if field == "description":
                                 function_tokens += 2
                                 function_tokens += len(encoding.encode(v["description"]))
                             elif field == "enum":
@@ -130,6 +127,9 @@ class TokenLimiterOpenAI(TokenLimiter):
                                 for o in v["enum"]:
                                     function_tokens += 3
                                     function_tokens += len(encoding.encode(o))
+                            elif field == "type":
+                                function_tokens += 2
+                                function_tokens += len(encoding.encode(v["type"]))
                             else:
                                 print(f"Warning: not supported field {field}")
                     function_tokens += 11

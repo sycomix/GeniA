@@ -128,7 +128,7 @@ class LLMConversationService:
     ):
         result = False
         messages_reverse = llm_conversation.get_messages()[::-1]
-        for index, msg in enumerate(messages_reverse):
+        for msg in messages_reverse:
             if msg["role"] == "function":
                 tool = llm_functions_repository.find_tool_by_name(msg["name"])
                 if tool is not None and tool["category"] == "skill":
@@ -199,22 +199,28 @@ class LLMConversationService:
         llm_conversation.append(msg)
 
     def is_message_chain_too_long(self, messages):
-        length = 1
-        for index, msg in enumerate(messages):
-            # count user messages which are not a reply to validation request
-            if msg["role"] == "user" and index > 0 and messages[index - 1].get("validation") is None:
-                length += 1
+        length = 1 + sum(
+            1
+            for index, msg in enumerate(messages)
+            if msg["role"] == "user"
+            and index > 0
+            and messages[index - 1].get("validation") is None
+        )
         return length >= settings["chat"]["max_user_message_chain"]
 
     def shorten_conversation(self, llm_conversation: LLMConversation):
         try:
             messages = llm_conversation.get_messages()
-            next_user_message_idx = len(messages)
-            for index, value in enumerate(messages):
-                # get non first user messages which is also not a reply to validation request
-                if value["role"] == "user" and index > 0 and messages[index - 1].get("validation") is None:
-                    next_user_message_idx = index
-                    break
+            next_user_message_idx = next(
+                (
+                    index
+                    for index, value in enumerate(messages)
+                    if value["role"] == "user"
+                    and index > 0
+                    and messages[index - 1].get("validation") is None
+                ),
+                len(messages),
+            )
             # clear all messages befor this one
             llm_conversation.slice(next_user_message_idx)
         except Exception as e:
@@ -224,9 +230,10 @@ class LLMConversationService:
     def build_messages_for_model(self, llm_conversation: LLMConversation):
         """remove the validation key as it is not part of openai schema which is enforced"""
         messages = self.get_init_message()
-        output = []
-        for message in llm_conversation.get_messages():
-            output.append({k: v for k, v in message.items() if k != "validation"})
+        output = [
+            {k: v for k, v in message.items() if k != "validation"}
+            for message in llm_conversation.get_messages()
+        ]
         messages.extend(output)
         return messages
 
@@ -255,6 +262,7 @@ class LLMConversationService:
         if not logger.isEnabledFor(logging.DEBUG):
             return
 
+        formatted_messages = []
         role_to_color = {
             "system": "light_red",
             "user": "green",
@@ -262,7 +270,6 @@ class LLMConversationService:
             "assistant_function": "light_blue",
             "function": "magenta",
         }
-        formatted_messages = []
         for message in llm_conversation.get_messages():
             if message["role"] == "assistant" and message.get("function_call"):
                 formatted_messages.append(colored(message, role_to_color["assistant_function"]))
@@ -270,17 +277,18 @@ class LLMConversationService:
                 formatted_messages.append(colored(message, role_to_color[message["role"]]))
 
         formatted_messages.append(colored("list of functions:", "light_cyan"))
-        for index, function in enumerate(llm_conversation.get_model_functions()):
-            formatted_messages.append(
-                colored(
-                    str(index)
-                    + ". "
-                    + function[0]["name"]
-                    + " {"
-                    + "{:.3f}".format(function[1])
-                    + "}: "
-                    + function[0]["description"],
-                    "light_cyan",
-                )
+        formatted_messages.extend(
+            colored(
+                f"{str(index)}. "
+                + function[0]["name"]
+                + " {"
+                + "{:.3f}".format(function[1])
+                + "}: "
+                + function[0]["description"],
+                "light_cyan",
             )
+            for index, function in enumerate(
+                llm_conversation.get_model_functions()
+            )
+        )
         logger.debug("\n".join(formatted_messages))

@@ -86,7 +86,7 @@ class OpenAIChat(OpenAIToolsEmpoweredAgent):
                     try:
                         llm_matching_tool = self._llm_functions_repository.find_tool_by_name(function_name)
                         if llm_matching_tool is None:
-                            raise ValueError("function {} doesn't exist".format(llm_matching_tool))
+                            raise ValueError(f"function {llm_matching_tool} doesn't exist")
                         self.logger.debug("found the tool: %s", llm_matching_tool)
                         if self._llm_tools_validator.is_tool_validation_required(
                             self._llm_conversation_service,

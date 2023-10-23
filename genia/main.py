@@ -81,10 +81,7 @@ def slack():
     workers = settings.server.workers
 
     logging.info(f"starting server listen on host: {host} with port: {port} with #workers: {workers}")
-    options = {
-        "bind": "%s:%s" % (host, port),
-        "workers": workers,
-    }
+    options = {"bind": f"{host}:{port}", "workers": workers}
     ServerApplication(app, options).run()
 
 

@@ -129,13 +129,9 @@ class KubernetesJobs:
         self.logger.info(f"job deleted. response='{str(api_response)}")
 
     def list_namespaced_jobs(self, namespace):
-        jobs = []
-
         api_response = self.api_client_batch.list_namespaced_job(namespace)
         self.logger.info(f"job listed. response='{str(api_response)}")
-        for item in api_response.items:
-            jobs.append(item.metadata.name)
-        return jobs
+        return [item.metadata.name for item in api_response.items]
 
     def get_namespaced_job_logs(self, namespace, job_name):
         while True:
